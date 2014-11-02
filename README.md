@@ -1,4 +1,4 @@
-Retalis will be released by Dec 15th, 2014.
+Retalis will be released in December, 2014.
 
 =======
 
