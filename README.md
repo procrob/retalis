@@ -1,6 +1,8 @@
-Retalis will be released by December 15th, 2014.
+Retalis Language for Information Engineering in Autonomous Robot Software
 
-For more details see http://robolab.gforge.uni.lu/pages/research.html
+http://robolab.gforge.uni.lu/pages/research.html
+
+Retalis will be released by December 15th, 2014.
 =======
 
 
