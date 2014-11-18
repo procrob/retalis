@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<publish_subscribe>
+	<!--<publish_to name="camera/image_raw" msg_type="sensor_msgs/Image" />-->
+        <!--subscribe_to name="tf" msg_type="tf/tfMessage"/-->
+	<subscribe_to name="/face_recognition/feedback" msg_type="face_recognition/FaceRecognitionActionFeedback"/>
+	<subscribe_to name="ar_pose_marker" msg_type="ar_pose/ARMarkers"/>
+        <publish_to name="marker1" msg_type="geometry_msgs/PoseStamped" />
+	<publish_to name="marker2" msg_type="geometry_msgs/PoseStamped" />
+	<publish_to name="marker3" msg_type="geometry_msgs/PoseStamped" />
+	<publish_to name="marker4" msg_type="geometry_msgs/PoseStamped" />
+	<publish_to name="marker5" msg_type="geometry_msgs/PoseStamped" />
+	<publish_to name="marker6" msg_type="geometry_msgs/PoseStamped" />
+	<publish_to name="marker7" msg_type="geometry_msgs/PoseStamped" />
+	<publish_to name="marker8" msg_type="geometry_msgs/PoseStamped" />
+</publish_subscribe>
+

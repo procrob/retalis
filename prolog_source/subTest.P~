@@ -1,0 +1,300 @@
+/****
+    This is part of the Retalis Language for Information Processing and Management in Robotics
+    Copyright (C) 2014 __Pouyan Ziafati__ pziafati@gmail.com 
+
+    Retalis is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Retalis is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.                   
+
+    You should have received a copy of the GNU General Public License
+    along with Retalis.  If not, see <http://www.gnu.org/licenses/>.	
+****/
+
+
+
+:- dynamic(subscribe_goal/3).
+:- dynamic(memorize_goal/4).
+:- dynamic(subscribe_check_condition/3).
+:- dynamic(ccc/2).
+:- dynamic(sync_goal/3).
+:- dynamic(memItem/6).
+:- dynamic(sync_id/1).
+:- dynamic(async_counter/2).
+:- dynamic(cached_query/5).
+																
+
+new_event(Event,[DTimeS,DTimeE]):-
+		event(Event, [DTimeS,DTimeE] ) .	
+		
+		
+new_event(Event,T1S,T1NS):-
+		stamp_date_time(T1S, date(Y,M,D,H,Mn,S,_Off,_TZ,_DST), 'UTC'),
+		
+		event(Event,[datime(Y,M,D,H,Mn,S,T1NS),datime(Y,M,D,H,Mn,S,T1NS)]).	
+				
+new_event(Event,T1S,T1NS,T2S,T2NS):-
+		stamp_date_time(T1S, date(Y,M,D,H,Mn,S,_Off,_TZ,_DST), local),
+		stamp_date_time(T2S, date(Y2,M2,D2,H2,Mn2,S2,_Off2,_TZ2,_DST2), local),
+		event(Event,[datime(Y,M,D,H,Mn,S,T1NS),datime(Y2,M2,D2,H2,Mn2,S2,T2NS)]).	
+
+
+
+subscribe(P, Cond, NewP, U, Id):-
+				(var(NewP), NewP=P,!;true),
+				assert((   subscribe_goal(P,Id,U,NewP)  )), 
+				create_subscribe_condition(P,Cond,Id,U).
+
+create_subscribe_condition(P,Cond,Id,U):-
+			list_to_tuple(Cond,Body),
+			assert((subscribe_check_condition(Id,U,P) :- Body)).
+
+feed_subscribers(event(Event,[_T1,_T2])):- 
+					 subscribe_goal(Event,Id,U,NewP),
+					 subscribe_check_condition(Id,U,Event),
+					 output_to_ros(event(NewP,U,Id)),
+					 fail.
+feed_subscribers(_).
+
+
+
+
+						 	
+memorize(P, Cond, NewP, Id, N):-
+				 (var(NewP), NewP=P,!;true),
+				 assert((   memorize_goal(P, NewP, Id, N)  )),
+				 assert(( memory_size(Id,N) )),
+         			 assert(memory_counter(Id,0)), 
+         			 create_memory_condition(P,Cond,Id),
+				 label_time_stamp(Datime),
+				 event_trigger(event(memory_created(P,Cond,NewP,Id,N),[Datime,Datime])).
+					
+
+create_memory_condition(P,Cond,Id):-
+			list_to_tuple(Cond,Body),
+			assert((memorize_check_condition(Id,P) :- Body)).
+
+
+feed_memories(event(Event,[T1,T2])):-
+				      memorize_goal(Event, NewP, Id, N),
+				      add_to_memory(Event, NewP, Id, N,T1,T2),
+				      fail.		
+feed_memories(_).
+
+
+add_to_memory(Event, NewP, Id, N,T1,T2) :-
+			(	
+			memorize_check_condition(Id,Event), 
+			retract(memory_counter(Id,Count)), 
+			CountNew is Count + 1,
+			assert(memory_counter(Id,CountNew)),
+			term_hash([Id,CountNew],HashNew),
+			asserta(memItem(HashNew,Id,CountNew, NewP, T1,T2)),!
+			
+			),
+			(Count >= N ->	
+				Old is Count - N +1,
+				term_hash([Id,Old],HashOld),	
+				retract(memItem(HashOld,Id,Old, _, _,_))			
+				;
+				true
+			), 
+			label_time_stamp(Datime),
+			event_trigger(event(memory_updated(Id,T2),[Datime,Datime])).
+
+
+
+
+
+
+smc_logging_external_event(event(Event,[T1,T2])):- feed_subscribers(event(Event,[T1,T2])),fail.
+
+smc_logging_external_event(event(Event,[T1,T2])):- feed_memories(event(Event,[T1,T2])),fail.
+
+smc_logging_external_event(event(syncronized(Event,Query,Sync),[T1,T2])):- 
+			        sync-query(Event,Query,Sync,[T1,T2]),
+				fail.
+smc_logging_external_event(event(memory_updated(Id,T),[_T1,_T2])):- 
+				feed_cached_queries(Id,T),
+				fail.
+smc_logging_external_event(_).
+
+
+
+
+sync-query(Event,Query,Sync,[T1,T2]):-!,
+				 sync_id(Id),
+				
+				 check_data_availability(Sync,Id),
+				 
+				  
+				 
+				(	async_counter(Id,Counter),
+					Counter=0 -> 
+						(
+						call(Query),
+						event_trigger( event(Event,[T1,T2] ) ),
+						retract((async_counter(Id,_))),
+						%write(performed(Id)),nl,!
+						
+						)
+						;
+						(
+						retract((sync_id(Id))), 
+						Id1 is Id+1, 
+						assert((sync_id(Id1))),
+						assert(( cached_query(Id,Event,Query,T1,T2) ) ),
+						%write(cached(Id)),nl,!
+						
+						
+						)
+				).
+
+
+sync_id(0).
+
+
+check_data_availability(Sync,Id) :- !, assert(async_counter(Id,0)), forall(member([MemName,SyncTime], Sync), test_availability(MemName,SyncTime,Id)).
+
+test_availability(Name,SyncTime,Id) :- last_mem_item_time(Name,T),
+										(T >= SyncTime ->
+										true
+ 										;
+ 										assert(sync_goal(Name,SyncTime,Id)),
+ 										
+ 										retract(async_counter(Id,CC)), CC1 is CC+1, assert(async_counter(Id,CC1))
+ 										).
+
+last_mem_item_time(Id,T) :- !, memory_counter(Id,FirstIndex),(
+						            term_hash([Id,FirstIndex], FIHash), memItem(FIHash,Id,FirstIndex, _,_,datime(Y,M,D,H,Min,S,Counter))-> 
+									date_time_stamp(date(Y,M,D,H,Min,S,0,_TZ,_DST),Time1), T is (Time1 + (Counter*0.000000001))
+									;
+									T is -1 
+							   ).
+
+
+
+
+
+
+feed_cached_queries(Name,Timee) :-
+				sync_goal(Name,SyncTime,QueryId), 
+				%write(sync_goal(Name,SyncTime,QueryId)),nl,		
+								(
+									Timee = datime(Y,M,D,H1,Min1,S1,Counter1),
+									date_time_stamp(date(Y,M,D,H1,Min1,S1,0,_TZ,_DST),Time1), Time is (Time1 + (Counter1*0.000000001)),
+									%write(synctime(SyncTime)),nl,
+									%write(synctime(Time)),nl,
+									Time >= SyncTime ->
+										
+										retract(sync_goal(Name,SyncTime,QueryId)),
+										retract(async_counter(QueryId,Counter)),
+										%write(removed(QueryId,Counter)),nl,
+											(
+												Counter = 1 ->
+												   % write(beforeperformremove),nl,
+												    retract( cached_query(QueryId,Event,Query,T1,T2)),
+												    Query,
+												    %write(performed(QueryId)),nl,
+												    event_trigger(event(Event,[T1,T2]))
+												    ;
+												    NewCounter is Counter -1,
+													%write(removeddddddddddddd(QueryId,NewCounter)),nl,
+												    assert(async_counter(QueryId,NewCounter))				
+											)
+										;
+										
+										true
+								),fail.	
+
+
+feed_cached_queries(_,_).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+logging_external_event(event(Event,[T1,T2])):- 
+			smc_logging_external_event(event(Event,[T1,T2])).
+		
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%logging_external_event(event(Event,[T1,T2])):- true.  
+%%%%%%copy From ETALIS, Todo: remove this by making logging_external_event dynamic, so that consulting new 
+%%%%%definition would not remove the original definition of ETALIS
+logging_external_event(event(Event,[T1,T2])):-
+	java_notification(off),
+	external_trigger_check(Event),
+	!,
+	(
+		( write('*Event: '), write(Event), write(' @ '),
+			write([T1,T2]), nl
+			%, db_log(_L)
+		)
+		%TODO write_log should only be used when logging_to_file(on)
+		,write_log('external_tr.log',event(Event,[T1,T2]))
+		%;(write('  Failed:  '), write(event(Event,[T1,T2])), nl,fail)
+	),
+	log(event(Event,[T1,T2])),
+	spy_point(Event).
+
+% added for java notification
+logging_external_event(event(Event,[T1,T2])):-
+	java_notification(on),
+	external_trigger_check(Event), write('xxxxxxxxxxxxxxxx'),nl,write(Event),nl,write('kkkkkkkkkkkkkkkkkkk'),nl,
+	!,
+	
+	(
+		notify_java_listener(Event, T1, T2),
+		sleep(1)
+	),
+	write('ffffffffffffffffffffff'),nl,
+	log(event(Event,[T1,T2])),
+	spy_point(Event).
+
+logging_external_event(event(Event,[T1,T2])):-
+	!,
+	log(event(Event,[T1,T2])),
+	write_log('external_tr.log',event(Event,[T1,T2])),
+	spy_point(Event).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+notify_scheduled_alarm(AlarmEvent,Time, Mode):-  
+	Time = datime(Y1, M1, D1, H1, Min1, Sec1, _Counter1),!,
+	java_alarm_queue_id(ID), 
+	java_engine(Engine),
+	'JPL' == Engine,
+	date_time_stamp(date(Y1, M1, D1, H1, Min1, Sec1, 0, -, -), TimeStamp1),
+	term_to_atom(AlarmEvent, Evt),
+	term_to_atom(Mode,Mde),
+	jpl_call(ID, notifyAlarmReceived, [Evt, TimeStamp1, Mde], @(void)).
+		     
+notify_scheduled_alarm(AlarmEvent,Time, Mode):-
+	!,
+	java_alarm_queue_id(ID), 
+	java_engine(Engine),
+	'JPL' == Engine,
+	term_to_atom(AlarmEvent, Evt),
+	term_to_atom(Mode,Mde),
+	jpl_call(ID, notifyAlarmReceived, [Evt, Time, Mde], @(void)).
+	
+	
+list_to_tuple([],X) :- X=(true). 
+list_to_tuple([X],X):-!.
+list_to_tuple([H|T],(H,Rest_Tuple)) :-
+	    list_to_tuple(T,Rest_Tuple).	     

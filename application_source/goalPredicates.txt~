@@ -1,0 +1,32 @@
+set_etalis_flag(output_temporary_files,off)
+set_etalis_flag(event_consumption_policy,unrestricted)
+
+compile_event_file('/home/robolab/catkin_ws/src/retalis/application_source/eventRules.txt')
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_1"'),_),[],_,marker1,m1)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_2"'),_),[],_,marker2,m2)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_3"'),_),[],_,marker3,m3)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_4"'),_),[],_,marker4,m4)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_5"'),_),[],_,marker5,m5)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_6"'),_),[],_,marker6,m6)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_7"'),_),[],_,marker7,m7)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_8"'),_),[],_,marker8,m8)
+
+memorize(tf(  '"/odom"',        '"/base_link"',        V,Q),[],	     tf(V,Q),		 		tf('"odom"','"base_link"'),         2500 )
+
+memorize(tf(  '"base_link"',   '"torso"',              V,Q),[], 	     tf(V,Q), 	 			tf('"base_link"','"torso"'),     2500)
+
+memorize(tf(  '"torso"',       '"Neck"',               V,Q),[], 	     tf(V,Q),			 	tf('"torso"','"Neck"'),             2500)
+
+memorize(tf(  '"Neck"',        '"Head"',               V,Q),[], 	     tf(V,Q), 			 	tf('"Neck"','"Head"'),              2500)
+
+memorize(slr_event(tf(  '"Head"',        '"CameraTop_frame"',    V,Q),[],           tf(V,Q), 				tf('"Head"','"CameraTop_frame"'),   2500)
+
+

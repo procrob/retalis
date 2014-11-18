@@ -1,0 +1,84 @@
+/****
+    Retalis Language for Information Processing and Management in Autonomous Robot Software
+    
+    Copyright (C) 2014 __Pouyan Ziafati__ pziafati@gmail.com __ 
+    University of Luxembourg, Supported by the Fonds National de la Recherche, Luxembourg	
+     
+
+    Retalis is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Retalis is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.                   
+
+    You should have received a copy of the GNU General Public License
+    along with Retalis.  If not, see <http://www.gnu.org/licenses/>.	
+****/
+
+
+
+
+*** Installation:
+
+Step 0: it is assumed that the "retalis" package has been downloaded to the "catkin_ws/src" folder
+
+Step 1: install OpenGL Mathematics (GLM)  
+	1- sudo apt-get install libglm-dev
+
+Step 2: install SWI-PL as a shared library
+	1- Download pl source code (6.2.2. for me) from http://www.swi-prolog.org/download/stable
+	2- Extract the tarball and edit the build.templ file as follows: 
+		Set PREFIX=/usr
+		Set SUDO="sudo"
+		Disable some library that might cause problem by uncommenting 
+			export DISABLE_PKGS="ssl  xpce zlib"
+		Uncomment the following
+			EXTRACFG+=" --enable-shared"
+
+	3- Run build.templ. (as root)
+	4- Make sure libswipl.so has been created. In my system, it is found at
+		/usr/lib/swipl-6.2.2/lib/i686-linux/libswipl.so
+
+
+Step 3: install Retalis as follows
+	1- In the CMakeLists.txt file, set values of "SWI_INCLUDE_DIR" and "SWI_LIB_DIR"  according to your SWI-PL installtion
+	2- catkin_make
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Step 4: copy generated libraries for SWI-PL as follows. Just change the "/usr/lib/swipl-6.6.6/lib/x86_64-linux" to the correct path 		according to your SWI-PL installation
+    	
+	1- sudo cp ~/catkin_ws/devel/lib/libretalis_output_interface.so /usr/lib/swipl-6.6.6/lib/x86_64-linux/			retalis_output_interface.so  	
+	2- sudo cp ~/catkin_ws/devel/lib/libswiglm.so /usr/lib/swipl-6.6.6/lib/x86_64-linux/swiglm.so
+
+
+
+
+
+
+

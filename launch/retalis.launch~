@@ -1,0 +1,15 @@
+
+<launch>
+<param name="use_sim_time" value="true" />
+
+<node pkg="retalis" type="retalis_node" name="retalis"
+args="$(find retalis)"/>
+<node pkg="retalis" type="retalis_ros_converter.py" name="retalis_ros_interface"
+args="$(find retalis)"/>
+
+<!--
+<node pkg="tf" type="static_transform_publisher"
+name="base_link_to_camera" args="0.060 0.072 0.683 -0.542
+0.542 -0.455 0.455 /base_link /camera_wide_left 100" /> -->
+
+</launch>

@@ -1,0 +1,68 @@
+null_event do split_tf(Transforms)    <- tf__0__tfMessage(Transforms).
+null_event do split_ar_pose(Markers)  <- ar_pose__0__ARMarkers(Header,Markers).	
+
+
+syncronized(	
+      		geometry_msgs__0__PoseStamped(std_msgs__0__Header(Seq, [Sec, NSec], MarkerName),geometry_msgs__0__Pose(geometry_msgs__0__Point(P11,P12,P13),geometry_msgs__0__Quaternion(Q11,Q12,Q13,Q14))), 
+                transform_marker(RelPose,[Sec,NSec],[[P11,P12,P13],[Q11,Q12,Q13,Q14]]),
+      	        [[tf('"odom"','"base_link"'),Z],[tf('"base_link"','"torso"'),Z],[tf('"torso"','"Neck"'),Z],[tf('"Neck"','"Head"'),Z],[tf('"Head"','"CameraTop_frame"'),Z]]  		 
+ 	      )     
+		 <- ar_marker(Seq,MarkerName,RelPose,Sec,NSec) where (Z is Sec + (NSec * 0.000000001) ).
+                       
+                                          
+                                          
+split_tf([Head|Tale]) :- 
+				Head = geometry_msgs__0__TransformStamped(std_msgs__0__Header(_, [Sec, NSec], Parent), Child, geometry_msgs__0__Transform(
+																			  geometry_msgs__0__Vector3(P1,P2,P3), 																				  geometry_msgs__0__Quaternion(Q1,Q2,Q3,Q4))
+																			  ),
+			     	new_event(tf(Parent,Child,[P1,P2,P3],[Q1,Q2,Q3,Q4]),Sec,NSec),
+                                split_tf(Tale).
+split_tf([]) .						  	     
+			
+
+
+split_ar_pose([Head|Tale]) :- 
+				Head=ar_pose__0__ARMarker(
+							  std_msgs__0__Header(Seq, [Sec, NSec], MarkerName), _Id,
+							  geometry_msgs__0__PoseWithCovariance(   geometry_msgs__0__Pose(   geometry_msgs__0__Point(P1,P2,P3),
+											       			            geometry_msgs__0__Quaternion(Q1,Q2,Q3,Q4)   ),
+									                       	  _Covariance   ),
+						         _Conf
+							 ),
+				new_event( ar_marker(Seq,MarkerName,[[P1,P2,P3],[Q1,Q2,Q3,Q4]],Sec,NSec), Sec,NSec ),
+ 				split_ar_pose(Tale).	
+split_ar_pose([]).
+                                 
+
+
+transform_marker(RelativePos,[Sec,NSec],AbsolutePose):-
+										stamp_date_time(Sec, date(Y,M,D,H,Mn,S,Off,TZ,DST), 'UTC'),	
+										Z = datime(Y,M,D,H,Mn,S,NSec),		
+										
+										prev(tf('"odom"','"base_link"'), tf(V11,Q11), T11, _, Z),
+										next_inf(tf('"odom"','"base_link"'), tf(V12,Q12), T12, _, Z),
+										datime_interpolate(T11,T12,Z,F1),
+										interpolate_quaternion(V11,Q11,V12,Q12,[F1],I1),
+										
+										prev(tf('"base_link"','"torso"'), tf(V21,Q21), T21, _, Z),
+										next_inf(tf('"base_link"','"torso"'), tf(V22,Q22), T22,_, Z),
+										datime_interpolate(T21,T22,Z,F2),
+										interpolate_quaternion(V21,Q21,V22,Q22,[F2],I2),
+
+										prev(tf('"torso"','"Neck"'), tf(V31,Q31), T31, _, Z),
+										next_inf(tf('"torso"','"Neck"'), tf(V32,Q32), T32, _, Z),
+										datime_interpolate(T31,T32,Z,F3),
+										interpolate_quaternion(V31,Q31,V32,Q32,[F3],I3),
+										
+										prev(tf('"Neck"','"Head"'), tf(V41,Q41), T41, _, Z),
+										next_inf(tf('"Neck"','"Head"'), tf(V42,Q42), T42,_, Z),
+										datime_interpolate(T41,T42,Z,F4),
+										interpolate_quaternion(V41,Q41,V42,Q42,[F4],I4),
+										
+										prev(tf('"Head"','"CameraTop_frame"'), tf(V51,Q51), T51, _, Z),
+										next_inf(tf('"Head"','"CameraTop_frame"'), tf(V52,Q52), T52, _, Z),
+										datime_interpolate(T51,T52,Z,F5),
+										interpolate_quaternion(V51,Q51,V52,Q52,[F5],I5),
+										
+										transform_quaternion([I1,I2,I3,I4,I5,RelativePos],AbsolutePose).
+

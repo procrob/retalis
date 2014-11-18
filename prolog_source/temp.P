@@ -1,0 +1,153 @@
+
+
+
+
+smc_input(smc_event(P, Cond, NewP, U, Id),SubTimeS,_SubTimeE):-!,
+          SubTimeS = datime(T1_Y,T1_M,T1_D,T1_H,T1_Min,T1_S,T1_Counter),
+	  T2_Y is T1_Y + 1,
+	  SubTimeENew = datime(T2_Y,T1_M,T1_D,T1_H,T1_Min,T1_S,T1_Counter),
+	  smc_sub(P,Cond,SubTimeS,SubTimeENew,U,Id,NewP).
+          
+smc_input(smc_event(P, Cond, NewP, U, Id)):-!,
+	  label_time_stamp(SubTimeS_temp),
+	  SubTimeS_temp = datime(T1_Y_temp,T1_M,T1_D,T1_H,T1_Min,T1_S,T1_Counter),
+	  T1_Y is T1_Y_temp -1,
+	  SubTimeS = datime(T1_Y,T1_M,T1_D,T1_H,T1_Min,T1_S,T1_Counter),
+	  T2_Y is T1_Y + 2,
+	  SubTimeE = datime(T2_Y,T1_M,T1_D,T1_H,T1_Min,T1_S,T1_Counter),
+          smc_sub(P,Cond,SubTimeS,SubTimeE,U,Id,NewP).
+
+smc_input(slr_event(P, Cond, PNew, Id, N, L, PeriodL)):-!,
+		  assert((   slr_goal(P, PNew, Id, N)  )),
+		  assert(( slr_g(Id,N) )),
+         	 assert(slr_counter(Id,0)), 
+         	 slr_create_condition_rule(P,Cond,Id).
+
+
+	
+smc_input(smc_event(P, Cond, NewP, U, Id, Ts, Te),_DTimeS,_DTimeE):-!,
+						        smc_sub(P,Cond,Ts,Te,U,Id,NewP).
+smc_input(smc_event(P, Cond, NewP, U, Id, Ts, Te)):-!,
+			       smc_sub(P,Cond,Ts,Te,U,Id,NewP).
+			       
+smc_input(Event,DTimeS,DTimeE):-!,
+				event(Event,[DTimeS,DTimeE]).
+smc_input(Event):-!,
+		   event(Event).
+		   
+slr_create_condition_rule(P,Cond,Id):-
+			list_to_tuple(Cond,Body),
+			assert((slr_check_condition(Id,P) :- Body)).
+			
+			
+smc_sub(P,Cond,Ts,Te,U,Id, NewP) :- 
+			assert((   smc_goal(P,sub(Id,U,Ts,Te),NewP)  )), 
+			write(smc_goal(P,sub(Id,U,Ts,Te))),nl,
+			smc_create_condition_rule(P,Cond,Id,U).
+
+smc_create_condition_rule(P,Cond,Id,U):-
+			list_to_tuple(Cond,Body),
+			assert((smc_check_condition(Id,U,P) :- Body)).
+
+smc_logging_external_event( event(smc_alarm(AlarmEvent,Time, Mode),[_T1,_T2]) ):-!,
+			notify_scheduled_alarm(AlarmEvent,Time, Mode).
+		
+smc_logging_external_event(event(slr_query_sync(Event,Query,Sync),[T1,T2])):- 
+			        event-sync-query(slr_query_sync(Event,Query,Sync),[T1,T2]),
+				fail.
+
+
+
+
+	
+smc_logging_external_event(event(Event,[T1,T2])):- 
+			
+			sub_goals(event(Event,[T1,T2])),
+			fail.
+
+sub_goals(event(Event,[T1,T2])):- !,
+			smc_goal(Event,sub(Id,U,Ts,Te), NewP),	
+			less_datime(Ts,T1), less_datime(T2,Te),
+			smc_check_condition(Id,U,Event),!,
+			output_to_ros(event(NewP,U,Id)).
+			
+smc_logging_external_event(event(Event,[T1,T2])):-
+		memory_goals(event(Event,[T1,T2])),
+		fail.
+memory_goals(event(Event,[T1,T2])):-!,
+
+          	slr_goal(Event, NewP, Id, N),
+          	aij_update(Event, NewP, Id, N,T1,T2).
+			
+aij_update(Event, NewP, Id, N,T1,T2) :-
+			(	
+			slr_check_condition(Id,Event), 
+			retract(slr_counter(Id,Count)), 
+			CountNew is Count + 1,
+			assert(slr_counter(Id,CountNew)),
+			term_hash([Id,CountNew],HashNew),
+			asserta(memItem(HashNew,Id,CountNew, NewP, T1,T2)),!
+			
+			),
+			(Count >= N ->	
+				Old is Count - N +1,
+				term_hash([Id,Old],HashOld),	
+				retract(memItem(HashOld,Id,Old, _, _,_))			
+				;
+				true
+			), 
+			mem_update_event(Id,T2).
+
+
+event-sync-query(slr_query_sync(Event,Query,Sync),[T1,T2]):-!,
+				 q_sync_id(Id),
+				 write('in queryyyyyyyyyyyyyyyy'),nl,
+				 slr_cache(Sync,Id),
+				 
+				  
+				 
+				(	cached_id(Id,Counter),
+					Counter=0 -> 
+						(
+						call(Query),
+						event_trigger( event(Event,[T1,T2] ) ),
+						retract((cached_id(Id,_0))),
+						write(performed(Id)),nl,!
+						
+						)
+						;
+						(
+						retract((q_sync_id(Id))), 
+						Id1 is Id+1, 
+						assert((q_sync_id(Id1))),
+						assert(( cached_query(Id,Event,Query,T1,T2) ) ),
+						write(cached(Id)),nl,!
+						
+						
+						)
+				).
+
+
+q_sync_id(0).
+
+
+
+slr_cache(Sync,Id) :- !, assert(cached_id(Id,0)), forall(member([MemName,SyncTime], Sync), slr_test_available(MemName,SyncTime,Id)).
+
+slr_test_available(Name,SyncTime,Id) :- last_mem_item_time(Name,T),
+										(T >= SyncTime ->
+										true
+ 										;
+ 										assert(slr_goal(Name,SyncTime,Id)),
+ 										
+ 										retract(cached_id(Id,CC)), CC1 is CC+1, assert(cached_id(Id,CC1))
+ 										).
+
+last_mem_item_time(Id,T) :- !, slr_counter(Id,FirstIndex),(term_hash([Id,FirstIndex], FIHash), memItem(FIHash,Id,FirstIndex, _,_,datime(Y,M,D,H,Min,S,Counter))-> 
+																								date_time_stamp(date(Y,M,D,H,Min,S,0,TZ,DST),Time1),
+																								T is (Time1 + (Counter*0.000000001))
+																								;
+																								
+																								 T is -1
+																							  ).
+

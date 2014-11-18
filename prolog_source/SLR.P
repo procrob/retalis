@@ -1,0 +1,308 @@
+/****
+    This is part of the Retalis Language for Information Processing and Management in Robotics
+    Copyright (C) 2014 __Pouyan Ziafati__ pziafati@gmail.com 
+
+    Retalis is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Retalis is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.                   
+
+    You should have received a copy of the GNU General Public License
+    along with Retalis.  If not, see <http://www.gnu.org/licenses/>.	
+****/
+
+
+
+
+
+prev(Id, P, T1, T2, Z) :- !, memory_size(Id,N),  memory_counter(Id,FirstIndex),(FirstIndex > N -> EndIndex is FirstIndex - N + 1 ; EndIndex is 1),
+		    term_hash([Id,FirstIndex], FIHash), memItem(FIHash,Id,FirstIndex, FP,FT1,FT2), 
+		   (less_equal_datime(FT2,Z) ->
+		   	P = FP, T1 = FT1, T2 = FT2
+		   	;
+		   	term_hash([Id,EndIndex], EIHash), memItem(EIHash,Id,EndIndex, _,_,ET2),
+		   	(less_datime(Z,ET2) -> 
+		   		fail
+		   		;
+		   		datime_minus_datime(FT2,ET2, WholePeriod),
+		   		datime_minus_datime(FT2,Z, FirstToPointerPeriod),
+		   		Index is FirstIndex - EndIndex,
+		   		Pointer is FirstIndex - floor(FirstToPointerPeriod / WholePeriod * Index),
+		   		
+		   		term_hash([Id,Pointer], PointerHash), memItem(PointerHash,Id,Pointer, PointerP,PointerT1,PointerT2),
+		   		(less_equal_datime(PointerT2,Z) ->
+		   			nb_setval(prev,PointerP),
+		   			nb_setval(prevT1,PointerT1),
+		   			nb_setval(prevT2,PointerT2),
+		   			prev_walk_front(Id, Z, Pointer)
+		   			;
+		   			prev_walk_back(Id, Z, Pointer)
+				),
+				nb_getval(prev,P),
+				nb_getval(prevT1,T1),		   
+				nb_getval(prevT2,T2)
+			  )
+		     ).
+
+
+
+prev_binary(Id, P, T1, T2, Z) :- !,memory_size(Id,N), memory_counter(Id,FirstIndex), (FirstIndex > N -> EndIndex is FirstIndex - N + 1 ; EndIndex is 1),
+		   term_hash([Id,FirstIndex], FIHash), memItem(FIHash,Id,FirstIndex, FP,FT1,FT2),
+		   (less_equal_datime(FT2,Z) ->
+		   	P = FP, T1 = FT1, T2 = FT2
+		   	;
+		   	term_hash([Id,EndIndex], EIHash), memItem(EIHash,Id,EndIndex, _,_,ET2),
+		   	(less_datime(Z,ET2) -> 
+		   		fail
+		   		;
+		   		nb_setval(prev_pointer, EndIndex),		   		
+		   		prev_find_pointer(Id, FirstIndex, EndIndex, Z),
+		   		nb_getval(prev_pointer, Pointer),
+		   		term_hash([Id,Pointer], PointerHash), memItem(PointerHash,Id,Pointer, PointerP,PointerT1,PointerT2),
+		   		(less_equal_datime(PointerT2,Z) ->
+		   			nb_setval(prev,PointerP),
+		   			nb_setval(prevT1,PointerT1),
+		   			nb_setval(prevT2,PointerT2),
+		   			prev_walk_front(Id, Z, Pointer)
+		   			;
+		   			prev_walk_back(Id, Z, Pointer)
+				),
+				nb_getval(prev,P),
+				nb_getval(prevT1,T1),		   
+				nb_getval(prevT2,T2)
+			 )
+		     ).
+
+
+prev_find_pointer(Id,PointFirst, PointEnd, Z) :-
+			PointFirst - PointEnd < 3 ->
+			true
+			;
+			Pointer is floor( (PointFirst + PointEnd) /2),
+			term_hash([Id,Pointer], PointerHash), memItem(PointerHash,Id,Pointer, _,_,PointerT2),
+			nb_setval(prev_pointer, Pointer),
+			(equal_datime(PointerT2,Z) ->
+				true
+				;
+				less_datime(PointerT2,Z) ->
+					prev_find_pointer(Id, PointFirst, Pointer, Z)
+					;
+					prev_find_pointer(Id, Pointer, PointEnd, Z)
+			).
+				
+
+
+		   					
+
+prev_walk_front(Id, Z, Pointer):- 	NewPointer is Pointer + 1,
+						term_hash([Id,NewPointer], NewPointerHash), memItem(NewPointerHash, Id, NewPointer, NewPointerP, NewPointerT1,NewPointerT2),
+						(less_equal_datime(NewPointerT2,Z)->
+							nb_setval(prev,NewPointerP),
+		   					nb_setval(prevT1,NewPointerT1),
+		   					nb_setval(prevT2,NewPointerT2),
+		   					prev_walk_front(Id, Z, NewPointer)	
+		   					;
+		   					true
+		   				).   
+  
+		   
+prev_walk_back(Id, Z, Pointer):- 	NewPointer is Pointer - 1,
+						term_hash([Id,NewPointer], NewPointerHash), memItem(NewPointerHash, Id, NewPointer, NewPointerP, NewPointerT1,NewPointerT2),
+						(less_equal_datime(NewPointerT2,Z)->
+						        nb_setval(prev,NewPointerP),
+		   					nb_setval(prevT1,NewPointerT1),
+		   					nb_setval(prevT2,NewPointerT2)							
+		   					;
+		   					prev_walk_back(Id, Z, NewPointer)
+		   				).   
+		   
+		   
+		   
+next(Id, P, T1, T2, Zs, Ze) :- !,memory_size(Id,N), memory_counter(Id,FirstIndex), (FirstIndex > N -> EndIndex is FirstIndex - N + 1; EndIndex is 1),
+		   term_hash([Id,FirstIndex], FIHash), memItem(FIHash,Id,FirstIndex, _,_,FT2),
+		   (less_datime(FT2,Zs) ->
+		   	fail	
+		   	;
+		   	term_hash([Id,EndIndex], EIHash), memItem(EIHash,Id,EndIndex, EP,ET1,ET2),
+		   	(less_equal_datime(Zs,ET2) -> 
+		   		  (
+		   		    less_equal_datime(ET2,Ze) ->
+		   	   	    P = EP, T1 = ET1, T2 = ET2
+		   	   	    ;
+		   	   	    fail
+		   		  
+		   		  )
+		   		;
+		   		datime_minus_datime(FT2,ET2, WholePeriod),
+		   		datime_minus_datime(FT2,Zs, FirstToPointerPeriod),
+		   		Index is FirstIndex - EndIndex ,
+		   		Pointer is FirstIndex - floor(FirstToPointerPeriod / WholePeriod * Index),
+		   		term_hash([Id,Pointer], PointerHash), memItem(PointerHash,Id,Pointer, PointerP,PointerT1,PointerT2),
+		   		(less_datime(PointerT2,Zs) ->
+		   			next_walk_front(Id, Zs, Pointer)
+		   			;
+		   			nb_setval(next,PointerP),
+		   			nb_setval(nextT1,PointerT1),
+		   			nb_setval(nextT2,PointerT2),
+		   			next_walk_back(Id, Zs, Pointer)
+		   		),
+		   		nb_getval(nextT2,T2),
+				(less_equal_datime(T2,Ze) ->
+					nb_getval(next,P),
+					nb_getval(nextT1,T1),!
+					;
+					fail
+				)	
+			)
+		  ).		
+
+
+
+next_inf(Id, P, T1, T2, Zs) :- !,memory_size(Id,N), memory_counter(Id,FirstIndex), (FirstIndex > N -> EndIndex is FirstIndex - N + 1; EndIndex is 1),
+		   term_hash([Id,FirstIndex], FIHash), memItem(FIHash,Id,FirstIndex, _,_,FT2),
+		   (less_datime(FT2,Zs) ->
+		   	fail	
+		   	;
+		   	term_hash([Id,EndIndex], EIHash), memItem(EIHash,Id,EndIndex, EP,ET1,ET2),
+		   	(less_equal_datime(Zs,ET2) -> 
+		   		  P = EP, T1 = ET1, T2 = ET2		   	   	  
+		   		;
+		   		datime_minus_datime(FT2,ET2, WholePeriod),
+		   		datime_minus_datime(FT2,Zs, FirstToPointerPeriod),
+		   		Index is FirstIndex - EndIndex ,
+		   		Pointer is FirstIndex - floor(FirstToPointerPeriod / WholePeriod * Index),
+		   		term_hash([Id,Pointer], PointerHash), memItem(PointerHash,Id,Pointer, PointerP,PointerT1,PointerT2),
+		   		(less_datime(PointerT2,Zs) ->
+		   			next_walk_front(Id, Zs, Pointer)
+		   			;
+		   			nb_setval(next,PointerP),
+		   			nb_setval(nextT1,PointerT1),
+		   			nb_setval(nextT2,PointerT2),
+		   			next_walk_back(Id, Zs, Pointer)
+		   		),
+		   		nb_getval(nextT2,T2),
+				nb_getval(next,P),
+				nb_getval(nextT1,T1),!				
+			)
+		  ).	
+
+		   			
+		   			
+next_binary(Id, P, T1, T2, Zs, Ze) :- !,memory_size(Id,N), memory_counter(Id,FirstIndex), (FirstIndex > N -> EndIndex is FirstIndex - N + 1; EndIndex is 1),
+		   term_hash([Id,FirstIndex], FIHash), memItem(FIHash,Id,FirstIndex, _,_,FT2),
+		   (less_datime(FT2,Zs) ->
+		   	fail	
+		   	;
+		   	term_hash([Id,EndIndex], EIHash), memItem(EIHash,Id,EndIndex, EP,ET1,ET2),
+		   	(less_equal_datime(Zs,ET2) -> 
+		   		  (
+		   		    less_equal_datime(ET2,Ze) ->
+		   	   	    P = EP, T1 = ET1, T2 = ET2
+		   	   	    ;
+		   	   	    fail
+		   		  
+		   		  )
+		   		;
+		   		nb_setval(next_pointer, FirstIndex),		   		
+		   		next_find_pointer(Id, FirstIndex, EndIndex, Zs),
+		   		nb_getval(next_pointer, Pointer),
+		   		term_hash([Id,Pointer], PointerHash), memItem(PointerHash,Id,Pointer, PointerP,PointerT1,PointerT2),
+		   		(less_datime(PointerT2,Zs) ->
+		   			next_walk_front(Id, Zs, Pointer)
+		   			;
+		   			nb_setval(next,PointerP),
+		   			nb_setval(nextT1,PointerT1),
+		   			nb_setval(nextT2,PointerT2),
+		   			next_walk_back(Id, Zs, Pointer)
+		   		),
+		   		nb_getval(nextT2,T2),
+				(less_equal_datime(T2,Ze) ->
+					nb_getval(next,P),
+					nb_getval(nextT1,T1),!
+					;
+					fail
+				)
+			)		
+		  ).		
+		   			
+
+next_find_pointer(Id,PointFirst, PointEnd, Zs) :-
+			PointFirst - PointEnd < 3 ->
+			true
+			;
+			Pointer is floor( (PointFirst + PointEnd) /2),
+			term_hash([Id,Pointer], PointerHash), memItem(PointerHash,Id,Pointer, _,_,PointerT2),
+			nb_setval(next_pointer, Pointer),
+			(equal_datime(PointerT2,Zs) ->
+				true
+				;
+				less_datime(PointerT2,Zs) ->
+					next_find_pointer(Id, PointFirst, Pointer, Zs)
+					;
+					next_find_pointer(Id, Pointer, PointEnd, Zs)
+			).
+					
+
+
+
+
+
+
+next_walk_front(Id, Zs, Pointer):- 	NewPointer is Pointer + 1,
+						term_hash([Id,NewPointer], NewPointerHash), memItem(NewPointerHash, Id, NewPointer, NewPointerP, NewPointerT1,NewPointerT2),
+						(less_datime(NewPointerT2,Zs) ->
+							next_walk_front(Id, Zs, NewPointer)
+							;
+							nb_setval(next,NewPointerP),
+		   					nb_setval(nextT1,NewPointerT1),
+		   					nb_setval(nextT2,NewPointerT2)
+		   					
+		   				).   
+		   					
+		   
+next_walk_back(Id, Zs, Pointer):- 	NewPointer is Pointer - 1,
+						term_hash([Id,NewPointer], NewPointerHash), memItem(NewPointerHash, Id, NewPointer, NewPointerP, NewPointerT1,NewPointerT2),
+						(less_equal_datime(Zs, NewPointerT2)->
+							nb_setval(next,NewPointerP),
+		   					nb_setval(nextT1,NewPointerT1),
+		   					nb_setval(nextT2,NewPointerT2),							
+		   					next_walk_back(Id, Zs, NewPointer)
+		   					;
+		   					true
+		   				).   
+		   
+		   
+		   
+		   
+less_equal_datime(datime(T1_Y,T1_M,T1_D,T1_H,T1_Min,T1_S,T1_Counter),
+		datime(T2_Y,T2_M,T2_D,T2_H,T2_Min,T2_S,T2_Counter)):-
+			( T1_Y > T2_Y -> fail; true ),
+			( T1_M > T2_M -> fail; true ),
+			( T1_D > T2_D -> fail; true ),
+			( T1_H > T2_H -> fail; true ),
+			( T1_Min > T2_Min -> fail;true ),
+			( T1_S > T2_S -> fail; true ),
+			( T2_Counter > T1_Counter -> fail; true), !.
+
+
+less_equal_datime(T1,T2):-
+	number(T1),
+	number(T2),
+	T1 =< T2.
+
+less_equal_datime(datime(T1_Y,T1_M,T1_D,T1_H,T1_Min,T1_S),
+	datime(T2_Y,T2_M,T2_D,T2_H,T2_Min,T2_S)):-
+		( T1_Y > T2_Y -> fail; true ),
+		( T1_M > T2_M -> fail; true ),
+		( T1_D > T2_D -> fail; true ),
+		( T1_H > T2_H -> fail; true ),
+		( T1_Min > T2_Min -> fail;true ),
+		( T1_S > T2_S -> fail; true ), !.
+
+			   
+		   
