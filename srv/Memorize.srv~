@@ -1,0 +1,7 @@
+string event
+string conditions
+string template
+string id
+uint32 size
+---
+string result

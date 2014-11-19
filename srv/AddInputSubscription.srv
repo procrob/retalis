@@ -1,0 +1,4 @@
+string topic
+string message_type
+---
+string result

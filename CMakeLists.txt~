@@ -20,9 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
    AddOutputSubscription.srv
    AddMemory.srv
    DeleteOutputSubscription.srv
-   DeleteMemory.srv
-   AddInputSubscription.srv
-   DeleteInputSubscription.srv		
+   DeleteMemory.srv	
  )
 
  generate_messages(

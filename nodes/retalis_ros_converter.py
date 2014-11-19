@@ -22,7 +22,7 @@
 import roslib; roslib.load_manifest('retalis')
 import xml.etree.ElementTree as ET
 from retalis_ros_helper import *
-#from retalis.msg import *
+from retalis.srv import *
 from std_msgs.msg import String
 from threading import *
 import rospy
@@ -42,7 +42,7 @@ publish_to = dict()
 # a dictionary which keeps key-value pairs of the form (topic-name,message-type-of-this-topic). 
 publish_to_msg_type = dict()
 
-
+subscribed_to = dict()
 
 
 """
@@ -84,12 +84,13 @@ def initialize():
 	root = tree.getroot()
 
 	#subscribe to topics of interest
+	global subscribed_to
 	for to_subscribe in root.iter('subscribe_to'):
 		try:			
 			message_class = roslib.message.get_message_class(to_subscribe.get('msg_type'))
 		except ImportError:
         		raise IOError("cannot load [%s]"%(type_))
-		rospy.Subscriber(to_subscribe.get('name'), message_class, inputFromRosCB)
+		subscribed_to[to_subscribe.get('name')] = rospy.Subscriber(to_subscribe.get('name'), message_class, inputFromRosCB)
 		print "[INFO] Sucessfully registered to: ", to_subscribe.get('name')	
  
 	#make publisher for topic of interest that we want to publish to in future
@@ -107,11 +108,28 @@ def initialize():
 
 	#rospy.Subscriber("smc_sub", RegWinSMC, smc_query_callback)
 	rospy.Subscriber("retalisOutputEvents", String, inputFromRetalis, queue_size = 10)
-	
-       
+	s1 = rospy.Service('add_input_subscription', AddInputSubscription, handle_add_input_subscription)
+	s2 = rospy.Service('delete_input_subscription', DeleteInputSubscription, handle_delete_input_subscription)       
 
 
 	
+def handle_add_input_subscription(req):
+    global subscribed_to
+    try:			
+		message_class = roslib.message.get_message_class(req.message_type)
+    except ImportError:
+       		raise IOError("cannot load [%s]"%(req.message_type))
+    subscribed_to[req.topic] = rospy.Subscriber(req.topic, message_class, inputFromRosCB)
+    print "[INFO] Sucessfully registered to: ", req.topic
+    return AddInputSubscriptionResponse('ok')
+
+
+	
+def handle_delete_input_subscription(req):
+    global subscribed_to
+    subscribed_to[req.topic].unregister()
+    return DeleteInputSubscriptionResponse('ok')
+
 	
 	
 

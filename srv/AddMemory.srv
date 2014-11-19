@@ -1,0 +1,7 @@
+string event
+string conditions
+string format
+string id
+string size
+---
+string result

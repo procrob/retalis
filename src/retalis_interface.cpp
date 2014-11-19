@@ -27,10 +27,19 @@
 #include <ros/package.h>
 #include "tinyxml.h"
 #include <fstream>
+#include "retalis/AddOutputSubscription.h"
+#include "retalis/AddMemory.h"
+#include "retalis/DeleteOutputSubscription.h"
+#include "retalis/DeleteMemory.h"
 //subscribers_manuals///////////
 #include "tf/tfMessage.h"	
 #include <string>
 //////////////////////////////// 
+#include <sstream>
+
+#define SSTR( x ) dynamic_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
+
 
 bool subscribe_to_tf_ = true;
 
@@ -69,7 +78,12 @@ public:
   			}
 
 		inputEventsSub_ = nh_.subscribe("retalisInputEvents", 5000, &Retalis::inputEventsCB,this);
-	
+		subscribeToTopics_ = nh_.advertiseService("add_output_subscription", &Retalis::subscribeSrv,this);
+		memorizeEvents_    = nh_.advertiseService("add_memory", &Retalis::memorizeSrv,this);
+		unSubscribeToTopics_ = nh_.advertiseService("delete_output_subscription", &Retalis::unSubscribeSrv,this);
+		unMemorizeEvents_    = nh_.advertiseService("delete_memory", &Retalis::unMemorizeSrv,this);
+		
+
 		//subscribers_manuals///////////
 		if(subscribe_to_tf_)
 			inputTFSub_ = nh_.subscribe("tf", 500, &Retalis::inputTFCB,this);
@@ -80,6 +94,75 @@ public:
 	~Retalis(void){
 	}
 
+	bool subscribeSrv(retalis::AddOutputSubscription::Request &req, retalis::AddOutputSubscription::Response &res)
+	{	
+		string conditions = "["+req.conditions+"]";
+		string query = "subscribe("+req.event +", "+ conditions +", "+ req.format +", "+ req.topic+", "+req.id+")";
+		mutex_.lock();
+		try
+			{
+				PlCall(query.c_str());
+			}
+		catch ( PlException &ex )
+  			{ 
+				std::cerr << (char *) ex << std::endl;
+  			} 			
+		mutex_.unlock();
+		res.result = "ok";
+		return true;
+	}
+	bool memorizeSrv(retalis::AddMemory::Request &req, retalis::AddMemory::Response &res)
+	{	
+		string conditions = "["+req.conditions+"]";
+		string query = "memorize("+req.event +", "+ conditions +", "+ req.format +", "+ req.id+", "+SSTR(req.size)+")";
+		mutex_.lock();
+		try
+			{
+				PlCall(query.c_str());
+			}
+		catch ( PlException &ex )
+  			{ 
+				std::cerr << (char *) ex << std::endl;
+  			} 			
+		mutex_.unlock();
+		res.result = "ok";
+		return true;
+	}
+
+	bool unSubscribeSrv(retalis::DeleteOutputSubscription::Request &req, retalis::DeleteOutputSubscription::Response &res)
+	{	
+		
+		string query = "delete_subscription("+req.topic+req.id+")";
+		mutex_.lock();
+		try
+			{
+				PlCall(query.c_str());
+			}
+		catch ( PlException &ex )
+  			{ 
+				std::cerr << (char *) ex << std::endl;
+  			} 			
+		mutex_.unlock();
+		res.result = "ok";
+		return true;
+	}
+	bool unMemorizeSrv(retalis::DeleteMemory::Request &req, retalis::DeleteMemory::Response &res)
+	{	
+		
+		string query = "delete_memory("+ req.id+")";
+		mutex_.lock();
+		try
+			{
+				PlCall(query.c_str());
+			}
+		catch ( PlException &ex )
+  			{ 
+				std::cerr << (char *) ex << std::endl;
+  			} 			
+		mutex_.unlock();
+		res.result = "ok";
+		return true;
+	}
 	void inputEventsCB(const std_msgs::String::ConstPtr& event)
 	{	
 		mutex_.lock();
@@ -92,6 +175,7 @@ public:
 				std::cerr << (char *) ex << std::endl;
   			} 			
 		mutex_.unlock();
+		
 	}
 
 	//subscribers_manuals///////////
@@ -164,6 +248,10 @@ protected:
         PlEngine swipl_;
 	ros::Subscriber inputEventsSub_;
 	boost::mutex mutex_;
+	ros::ServiceServer subscribeToTopics_;
+	ros::ServiceServer memorizeEvents_;
+	ros::ServiceServer unSubscribeToTopics_;
+	ros::ServiceServer unMemorizeEvents_;
 	//subscribers_manuals///////////
 	ros::Subscriber inputTFSub_;
 	////////////////////////////////

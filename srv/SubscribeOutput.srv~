@@ -1,0 +1,7 @@
+string event
+string conditions
+string template
+string subscriber
+string id
+---
+string result

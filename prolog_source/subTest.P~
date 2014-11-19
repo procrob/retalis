@@ -45,6 +45,14 @@ new_event(Event,T1S,T1NS,T2S,T2NS):-
 
 
 
+delete_subscription(U,Id) :- retract(subscribe_goal(_,Id,U,_)),
+			   clause(subscribe_check_condition(Id,U,_), _, Reference),
+			   erase(Reference).		
+delete_subscription(U,Id):- write('There was no such subscription to delete').
+
+
+
+
 subscribe(P, Cond, NewP, U, Id):-
 				(var(NewP), NewP=P,!;true),
 				assert((   subscribe_goal(P,Id,U,NewP)  )), 
@@ -140,7 +148,8 @@ sync-query(Event,Query,Sync,[T1,T2]):-!,
 						call(Query),
 						event_trigger( event(Event,[T1,T2] ) ),
 						retract((async_counter(Id,_))),
-						%write(performed(Id)),nl,!
+						%write(performed(Id)),nl,
+						!
 						
 						)
 						;
@@ -149,7 +158,8 @@ sync-query(Event,Query,Sync,[T1,T2]):-!,
 						Id1 is Id+1, 
 						assert((sync_id(Id1))),
 						assert(( cached_query(Id,Event,Query,T1,T2) ) ),
-						%write(cached(Id)),nl,!
+						%write(cached(Id)),nl,
+						!
 						
 						
 						)
