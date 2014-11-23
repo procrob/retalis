@@ -76,7 +76,9 @@ delete_memory(Id) :- retract(memorize_goal(_, _, Id, _)),
 		     retract(memory_counter(Id,_)),
 		     clause(memorize_check_condition(Id,_),_,Ref),
 		     erase(Ref),
-		     (retractall(memItem(_,Id,_,_,_,_));true).
+		     (retractall(memItem(_,Id,_,_,_,_));true),
+		     label_time_stamp(Datime),
+		     event_trigger(event(memory_deleted(Id),[Datime,Datime])).
 delete_memory(_) :- write('There was no such memory to delete'),nl.
 						 	
 memorize(P, Cond, NewP, Id, N):-
