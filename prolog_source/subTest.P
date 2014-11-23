@@ -18,7 +18,7 @@
 
 
 
-:- dynamic(subscribe_goal/3).
+:- dynamic(subscribe_goal/4).
 :- dynamic(memorize_goal/4).
 :- dynamic(subscribe_check_condition/3).
 :- dynamic(ccc/2).
@@ -48,7 +48,7 @@ new_event(Event,T1S,T1NS,T2S,T2NS):-
 delete_subscription(U,Id) :- retract(subscribe_goal(_,Id,U,_)),
 			   clause(subscribe_check_condition(Id,U,_), _, Reference),
 			   erase(Reference).		
-delete_subscription(U,Id):- write('There was no such subscription to delete'),nl.
+delete_subscription(_,_):- write('There was no such subscription to delete'),nl.
 
 
 
@@ -74,10 +74,10 @@ feed_subscribers(_).
 delete_memory(Id) :- retract(memorize_goal(_, _, Id, _)),
 		     retract(memory_size(Id,_)),
 		     retract(memory_counter(Id,_)),
-		     clause(memorize_check_condition(Id,P),_,Ref),
+		     clause(memorize_check_condition(Id,_),_,Ref),
 		     erase(Ref),
 		     (retractall(memItem(_,Id,_,_,_,_));true).
-delete_memory(Id) :- write('There was no such memory to delete'),nl.
+delete_memory(_) :- write('There was no such memory to delete'),nl.
 						 	
 memorize(P, Cond, NewP, Id, N):-
 				 (var(NewP), NewP=P,!;true),

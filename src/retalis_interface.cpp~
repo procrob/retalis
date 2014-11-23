@@ -97,7 +97,7 @@ public:
 	bool subscribeSrv(retalis::AddOutputSubscription::Request &req, retalis::AddOutputSubscription::Response &res)
 	{	
 		string conditions = "["+req.conditions+"]";
-		string query = "subscribe("+req.event +", "+ conditions +", "+ req.format +", "+ req.subscriber+", "+req.id+")";
+		string query = "subscribe("+req.event +", "+ conditions +", "+ req.format +", "+ req.topic+", "+req.id+")";
 		mutex_.lock();
 		try
 			{
@@ -132,7 +132,7 @@ public:
 	bool unSubscribeSrv(retalis::DeleteOutputSubscription::Request &req, retalis::DeleteOutputSubscription::Response &res)
 	{	
 		
-		string query = "delete_subscription("+req.subscriber+req.id+")";
+		string query = "delete_subscription("+req.topic+req.id+")";
 		mutex_.lock();
 		try
 			{

@@ -16,11 +16,15 @@
     along with Retalis.  If not, see <http://www.gnu.org/licenses/>.	
 ****/
 
+convert_to_datime([Sec,NSec],Datime):- 
+					stamp_date_time(Sec, date(Y,M,D,H,Mn,S,Off,TZ,DST), 'UTC'),	
+										Datime = datime(Y,M,D,H,Mn,S,NSec).
 
 
 
+access_mem(Id,Event,T1,T2) :- memItem(_,Id,_,Event,T1,T2).
 
-prev(Id, P, T1, T2, Z) :- !, slr_g(Id,N),  slr_counter(Id,FirstIndex),(FirstIndex > N -> EndIndex is FirstIndex - N + 1 ; EndIndex is 1),
+prev(Id, P, T1, T2, Z) :- !, memory_size(Id,N),  memory_counter(Id,FirstIndex),(FirstIndex > N -> EndIndex is FirstIndex - N + 1 ; EndIndex is 1),
 		    term_hash([Id,FirstIndex], FIHash), memItem(FIHash,Id,FirstIndex, FP,FT1,FT2), 
 		   (less_equal_datime(FT2,Z) ->
 		   	P = FP, T1 = FT1, T2 = FT2
@@ -51,7 +55,7 @@ prev(Id, P, T1, T2, Z) :- !, slr_g(Id,N),  slr_counter(Id,FirstIndex),(FirstInde
 
 
 
-prev_binary(Id, P, T1, T2, Z) :- !,slr_g(Id,N), slr_counter(Id,FirstIndex), (FirstIndex > N -> EndIndex is FirstIndex - N + 1 ; EndIndex is 1),
+prev_binary(Id, P, T1, T2, Z) :- !,memory_size(Id,N), memory_counter(Id,FirstIndex), (FirstIndex > N -> EndIndex is FirstIndex - N + 1 ; EndIndex is 1),
 		   term_hash([Id,FirstIndex], FIHash), memItem(FIHash,Id,FirstIndex, FP,FT1,FT2),
 		   (less_equal_datime(FT2,Z) ->
 		   	P = FP, T1 = FT1, T2 = FT2
@@ -123,7 +127,7 @@ prev_walk_back(Id, Z, Pointer):- 	NewPointer is Pointer - 1,
 		   
 		   
 		   
-next(Id, P, T1, T2, Zs, Ze) :- !,slr_g(Id,N), slr_counter(Id,FirstIndex), (FirstIndex > N -> EndIndex is FirstIndex - N + 1; EndIndex is 1),
+next(Id, P, T1, T2, Zs, Ze) :- !,memory_size(Id,N), memory_counter(Id,FirstIndex), (FirstIndex > N -> EndIndex is FirstIndex - N + 1; EndIndex is 1),
 		   term_hash([Id,FirstIndex], FIHash), memItem(FIHash,Id,FirstIndex, _,_,FT2),
 		   (less_datime(FT2,Zs) ->
 		   	fail	
@@ -163,7 +167,7 @@ next(Id, P, T1, T2, Zs, Ze) :- !,slr_g(Id,N), slr_counter(Id,FirstIndex), (First
 
 
 
-next_inf(Id, P, T1, T2, Zs) :- !,slr_g(Id,N), slr_counter(Id,FirstIndex), (FirstIndex > N -> EndIndex is FirstIndex - N + 1; EndIndex is 1),
+next_inf(Id, P, T1, T2, Zs) :- !,memory_size(Id,N), memory_counter(Id,FirstIndex), (FirstIndex > N -> EndIndex is FirstIndex - N + 1; EndIndex is 1),
 		   term_hash([Id,FirstIndex], FIHash), memItem(FIHash,Id,FirstIndex, _,_,FT2),
 		   (less_datime(FT2,Zs) ->
 		   	fail	
@@ -193,7 +197,7 @@ next_inf(Id, P, T1, T2, Zs) :- !,slr_g(Id,N), slr_counter(Id,FirstIndex), (First
 
 		   			
 		   			
-next_binary(Id, P, T1, T2, Zs, Ze) :- !,slr_g(Id,N), slr_counter(Id,FirstIndex), (FirstIndex > N -> EndIndex is FirstIndex - N + 1; EndIndex is 1),
+next_binary(Id, P, T1, T2, Zs, Ze) :- !,memory_size(Id,N), memory_counter(Id,FirstIndex), (FirstIndex > N -> EndIndex is FirstIndex - N + 1; EndIndex is 1),
 		   term_hash([Id,FirstIndex], FIHash), memItem(FIHash,Id,FirstIndex, _,_,FT2),
 		   (less_datime(FT2,Zs) ->
 		   	fail	

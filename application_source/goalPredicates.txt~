@@ -19,14 +19,14 @@ subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_7"'),_),[]
 
 subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_8"'),_),[],_,marker8,m8)
 
-memorize(tf(  '"/odom"',        '"/base_link"',        V,Q),[],	     tf(V,Q),		 		tf('"odom"','"base_link"'),         2500 )
+memorize(tf(  '"/odom"',      '"/base_link"',      V,Q),[], tf(V,Q),	odom_base,  2500)
 
-memorize(tf(  '"base_link"',   '"torso"',              V,Q),[], 	     tf(V,Q), 	 			tf('"base_link"','"torso"'),     2500)
+memorize(tf(  '"base_link"',  '"torso"',           V,Q),[], tf(V,Q),	base_torso, 2500)
 
-memorize(tf(  '"torso"',       '"Neck"',               V,Q),[], 	     tf(V,Q),			 	tf('"torso"','"Neck"'),             2500)
+memorize(tf(  '"torso"',      '"Neck"',            V,Q),[], tf(V,Q), 	torso_neck, 2500)
 
-memorize(tf(  '"Neck"',        '"Head"',               V,Q),[], 	     tf(V,Q), 			 	tf('"Neck"','"Head"'),              2500)
+memorize(tf(  '"Neck"',       '"Head"',            V,Q),[], tf(V,Q), 	neck_head,  2500)
 
-memorize(slr_event(tf(  '"Head"',        '"CameraTop_frame"',    V,Q),[],           tf(V,Q), 				tf('"Head"','"CameraTop_frame"'),   2500)
+memorize(tf(  '"Head"',       '"CameraTop_frame"', V,Q),[], tf(V,Q),	head_cam,   2500)
 
 

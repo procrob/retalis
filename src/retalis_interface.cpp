@@ -41,7 +41,7 @@
         ( std::ostringstream() << std::dec << x ) ).str()
 
 
-bool subscribe_to_tf_ = true;
+bool subscribe_to_tf_ = false;
 
 using namespace std;
 const string pkgPath = ros::package::getPath("retalis");

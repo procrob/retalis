@@ -16,9 +16,13 @@
     along with Retalis.  If not, see <http://www.gnu.org/licenses/>.	
 ****/
 
+convert_to_datime([Sec,NSec],Datime):- 
+					stamp_date_time(Sec, date(Y,M,D,H,Mn,S,Off,TZ,DST), 'UTC'),	
+										Datime = datime(Y,M,D,H,Mn,S,NSec).
 
 
 
+access_mem(Id,Event,[T1,T2]) :- memItem(_,Id,_,Event,T1,T2).
 
 prev(Id, P, T1, T2, Z) :- !, memory_size(Id,N),  memory_counter(Id,FirstIndex),(FirstIndex > N -> EndIndex is FirstIndex - N + 1 ; EndIndex is 1),
 		    term_hash([Id,FirstIndex], FIHash), memItem(FIHash,Id,FirstIndex, FP,FT1,FT2), 
