@@ -11,7 +11,7 @@
 :- ensure_loaded('executor.P').
 :- ensure_loaded('flags.P').
 :- ensure_loaded('garbage_collection.P').
-%:- ensure_loaded('java_interface.P').
+:- ensure_loaded('java_interface.P').
 :- ensure_loaded('justify_etalis.P').
 :- ensure_loaded('labeled_event_rules.P').
 :- ensure_loaded('logging.P').
@@ -21,7 +21,7 @@
 :- ensure_loaded('storage.P').
 :- ensure_loaded('string.P').
 :- ensure_loaded('utils.P').
-%:- ensure_loaded('java_communication.P').
+:- ensure_loaded('java_communication.P').
 
 % compile_event_file/1
 %  compiles an event file, parsing, binarization, transformation to
@@ -155,9 +155,9 @@ repeat_read_database(_InputHandle).
 label_time_stamp(Datime):-
 	current_datime(DTdef),
 	DTdef=datime(Y,M,D,H,Min,Sec),
-	incCounter(timeCounter(datime(Y,M,D,H,Min,Sec))),
-	counter(timeCounter(datime(Y,M,D,H,Min,Sec)),Counter),
-	Datime = datime(Y,M,D,H,Min,Sec,Counter),
+	%incCounter(timeCounter(datime(Y,M,D,H,Min,Sec))),
+	%counter(timeCounter(datime(Y,M,D,H,Min,Sec)),Counter),
+	Datime = datime(Y,M,D,H,Min,Sec,0),
 	!.
 
 % fire_event_list_return_external_events(EventList,OutputList)

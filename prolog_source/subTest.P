@@ -19,7 +19,8 @@
 
 
 :- dynamic(subscribe_goal/4).
-:- dynamic(memorize_goal/4).
+:- dynamic(memorize_goal/5).
+:- dynamic(memorize_goal_new/5).
 :- dynamic(subscribe_check_condition/3).
 :- dynamic(ccc/2).
 :- dynamic(sync_goal/3).
@@ -28,6 +29,7 @@
 :- dynamic(async_counter/2).
 :- dynamic(cached_query/5).
 																
+
 
 new_event(Event,[DTimeS,DTimeE]):-
 		event(Event, [DTimeS,DTimeE] ) .	
@@ -71,25 +73,38 @@ feed_subscribers(_).
 
 
 
-delete_memory(Id) :- retract(memorize_goal(_, _, Id, _)),
+delete_memory(Id) :- retract(memorize_goal(_, _, Id, _,Active)),
 		     retract(memory_size(Id,_)),
 		     retract(memory_counter(Id,_)),
 		     clause(memorize_check_condition(Id,_),_,Ref),
 		     erase(Ref),
 		     (retractall(memItem(_,Id,_,_,_,_));true),
 		     label_time_stamp(Datime),
-		     event_trigger(event(memory_deleted(Id),[Datime,Datime])).
+		     (Active=1 -> event_trigger(event(memory_deleted(Id),[Datime,Datime]));true).
 delete_memory(_) :- write('There was no such memory to delete'),nl.
+
+memorize(P, Cond, NewP, Id, N) :- memorize(P, Cond, NewP, Id, N,1).
+memorize_diactive(P, Cond, NewP, Id, N) :- memorize(P, Cond, NewP, Id, N,0).
 						 	
-memorize(P, Cond, NewP, Id, N):-
+memorize(P, Cond, NewP, Id, N, Active):-
 				 (var(NewP), NewP=P,!;true),
-				 assert((   memorize_goal(P, NewP, Id, N)  )),
+				 assert((   memorize_goal(P, NewP, Id, N,Active)  )),
 				 assert(( memory_size(Id,N) )),
          			 assert(memory_counter(Id,0)), 
          			 create_memory_condition(P,Cond,Id),
 				 label_time_stamp(Datime),
-				 event_trigger(event(memory_created(P,Cond,NewP,Id,N),[Datime,Datime])).
+				 (Active=1-> event_trigger(event(memory_created(P,Cond,NewP,Id,N),[Datime,Datime]));true).
 					
+memorize_new(P, Cond, NewP, Id, N, Active):-
+				 (var(NewP), NewP=P,!;true),
+				 Clause =.. [Id,NewP,T1,T2],
+				 assert((   memorize_goal_new(P, Clause, Id, N,Active)  )),
+				 assert(( memory_size(Id,N) )),
+         			 create_memory_condition(P,Cond,Id),
+				 label_time_stamp(Datime),
+				 (Active=1-> event_trigger(event(memory_created(P,Cond,NewP,Id,N),[Datime,Datime]));true).
+		
+
 
 create_memory_condition(P,Cond,Id):-
 			list_to_tuple(Cond,Body),
@@ -97,13 +112,20 @@ create_memory_condition(P,Cond,Id):-
 
 
 feed_memories(event(Event,[T1,T2])):-
-				      memorize_goal(Event, NewP, Id, N),
-				      add_to_memory(Event, NewP, Id, N,T1,T2),
+				      memorize_goal(Event, NewP, Id, N, Active),
+					
+				      add_to_memory(Event, NewP, Id, N,T1,T2,Active),
 				      fail.		
 feed_memories(_).
 
 
-add_to_memory(Event, NewP, Id, N,T1,T2) :-
+feed_memories_new(event(Event,[T1,T2])):-
+				      memorize_goal_new(Event, Clause, Id, N, Active),
+				      add_to_memory_new(Clause, N,T1,T2,Active),
+				      fail.
+feed_memories_new(_).
+
+add_to_memory(Event, NewP, Id, N,T1,T2,Active) :-
 			(	
 			memorize_check_condition(Id,Event), 
 			retract(memory_counter(Id,Count)), 
@@ -119,11 +141,32 @@ add_to_memory(Event, NewP, Id, N,T1,T2) :-
 				retract(memItem(HashOld,Id,Old, _, _,_))			
 				;
 				true
-			), 
+			),
+			(Active=1 -> 
 			label_time_stamp(Datime),
-			event_trigger(event(memory_updated(Id,T2),[Datime,Datime])).
+			event_trigger(event(memory_updated(Id,T2),[Datime,Datime]))
+			;
+			true).
 
 
+add_to_memory_new(Clause, N,T1,T2,Active) :-
+			memorize_check_condition(Id,Event), 
+			nb_setarg(Clause,2,T1),
+			nb_setarg(Clause,3,T2),
+			assertz(Clause),
+       			 (   predicate_property(Clause, number_of_clauses(Size)),
+        		      Size > N	 ->
+					  functor(Clause, Name, Arity),
+	        			  functor(Generic, Name, Arity),
+          			  	  once(retract(Generic))
+       				 	   ;
+  					  true
+       			 ),
+			(Active=1 -> 
+			label_time_stamp(Datime),
+			event_trigger(event(memory_updated(Id,T2),[Datime,Datime]))
+			;
+			true).
 
 
 
@@ -248,6 +291,7 @@ feed_cached_queries(_,_).
 
 logging_external_event(event(Event,[T1,T2])):- 
 			smc_logging_external_event(event(Event,[T1,T2])).
+
 		
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %logging_external_event(event(Event,[T1,T2])):- true.  

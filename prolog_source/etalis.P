@@ -155,9 +155,9 @@ repeat_read_database(_InputHandle).
 label_time_stamp(Datime):-
 	current_datime(DTdef),
 	DTdef=datime(Y,M,D,H,Min,Sec),
-	incCounter(timeCounter(datime(Y,M,D,H,Min,Sec))),
-	counter(timeCounter(datime(Y,M,D,H,Min,Sec)),Counter),
-	Datime = datime(Y,M,D,H,Min,Sec,Counter),
+	%incCounter(timeCounter(datime(Y,M,D,H,Min,Sec))),
+	%counter(timeCounter(datime(Y,M,D,H,Min,Sec)),Counter),
+	Datime = datime(Y,M,D,H,Min,Sec,0),
 	!.
 
 % fire_event_list_return_external_events(EventList,OutputList)

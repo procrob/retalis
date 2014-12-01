@@ -1,0 +1,64 @@
+set_etalis_flag(event_consumption_policy,unrestricted)
+
+compile_event_file('/home/robolab/catkin_ws/src/retalis/application_source/eventRules.txt')
+
+memorize(tf(  '"/odom"',      '"/base_link"',      V,Q),[], tf(V,Q),	odom_base,  2500)
+
+memorize(tf(  '"base_link"',  '"torso"',           V,Q),[], tf(V,Q),	base_torso, 2500)
+
+memorize(tf(  '"torso"',      '"Neck"',            V,Q),[], tf(V,Q), 	torso_neck, 2500)
+
+memorize(tf(  '"Neck"',       '"Head"',            V,Q),[], tf(V,Q), 	neck_head,  2500)
+
+memorize(tf(  '"Head"',       '"CameraTop_frame"', V,Q),[], tf(V,Q),	head_cam,   2500)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_1"'),_),[],_,marker1,m1)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_2"'),_),[],_,marker2,m2)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_3"'),_),[],_,marker3,m3)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_4"'),_),[],_,marker4,m4)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_5"'),_),[],_,marker5,m5)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_6"'),_),[],_,marker6,m6)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_7"'),_),[],_,marker7,m7)
+
+subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_8"'),_),[],_,marker8,m8)
+
+
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	000,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	001,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	002,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	003,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	004,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	005,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	006,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	007,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	008,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	009,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	010,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	011,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	012,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	013,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	014,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	015,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	016,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	017,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	018,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	019,   2500)
+
+
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	020,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	021,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	022,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	023,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	024,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	025,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	026,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	027,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	028,   2500)
+memorize_diactive(tf(  X,    Y, V,Q),[], tf(V,Q),	029,   2500)
+

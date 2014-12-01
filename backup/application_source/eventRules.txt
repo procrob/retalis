@@ -39,7 +39,6 @@ interpolate_tf(Id,T,Pos):-
 			interpolate_quaternion(V1,Q1,V2,Q2,[Fraction],Pos).
 
 transform_marker(RelativePos,Time,AbsolutePose):-
-						write('start'),nl,
 						convert_to_datime(Time,T),	
 						interpolate_tf(odom_base,T,P1),										
 						interpolate_tf(base_torso,T,P2),
@@ -54,7 +53,8 @@ syncronized(
       	        [[odom_base,Z],[base_torso,Z],[torso_neck,Z],[neck_head,Z],[head_cam,Z]]  		 
  	      )     
 		 
-			<- ar_marker(Seq,Name,RelPose,Sec,NSec) where (Z is Sec +2 + (NSec * 0.000000001) ).
+			<- ar_marker(Seq,Name,RelPose,Sec,NSec) where (Z is Sec + (NSec * 0.000000001) ).
                        
                              
+
 

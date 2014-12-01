@@ -17,7 +17,7 @@
 ****/
 
 convert_to_datime([Sec,NSec],Datime):- 
-					stamp_date_time(Sec, date(Y,M,D,H,Mn,S,Off,TZ,DST), 'UTC'),	
+					stamp_date_time(Sec, date(Y,M,D,H,Mn,S,_,_,_), 'UTC'),	
 										Datime = datime(Y,M,D,H,Mn,S,NSec).
 
 

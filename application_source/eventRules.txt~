@@ -32,27 +32,38 @@ split_ar_pose([]).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% to split the markers  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+interpolate_tf(Id,T,Pos):- 
+			prev(Id, tf(V1,Q1), T1, _, T),
+       			next_inf(Id, tf(V2,Q2), T2, _, T),
+			datime_interpolate(T1,T2,T,Fraction),
+			interpolate_quaternion(V1,Q1,V2,Q2,[Fraction],Pos).
+
+transform_marker(RelativePos,Time,AbsolutePose):-
+						write('start'),nl,
+						convert_to_datime(Time,T),	
+						interpolate_tf(odom_base,T,P1),										
+						interpolate_tf(base_torso,T,P2),
+						interpolate_tf(torso_neck,T,P3),
+						interpolate_tf(neck_head,T,P4),
+						interpolate_tf(head_cam,T,P5),
+						transform_quaternion([P1,P2,P3,P4,P5,RelativePos],AbsolutePose),
+						convert_to_datime([1413759164,0],TTT),
+						forall(between(1,100,Num), tq(Num,T,TTT)).
+
 syncronized(	
       		geometry_msgs__0__PoseStamped(std_msgs__0__Header(Seq, [Sec,NSec], Name),geometry_msgs__0__Pose(geometry_msgs__0__Point(P11,P12,P13),geometry_msgs__0__Quaternion(Q11,Q12,Q13,Q14))), 
                 transform_marker(RelPose,[Sec,NSec],[[P11,P12,P13],[Q11,Q12,Q13,Q14]]),
       	        [[odom_base,Z],[base_torso,Z],[torso_neck,Z],[neck_head,Z],[head_cam,Z]]  		 
  	      )     
-		 <- ar_marker(Seq,Name,RelPose,Sec,NSec) where (Z is Sec + (NSec * 0.000000001) ).
+		 
+			<- ar_marker(Seq,Name,RelPose,Sec,NSec) where (Z is Sec +2 + (NSec * 0.000000001) ).
                        
-                                          
-transform_marker(RelativePos,Time,AbsolutePose):-
-										convert_to_datime(Time,T),	
-										interpolate_tf(odom_base,T,P1),										
-										interpolate_tf(base_torso,T,P2),
-										interpolate_tf(torso_neck,T,P3),
-										interpolate_tf(neck_head,T,P4),
-										interpolate_tf(head_cam,T,P5),
-										transform_quaternion([P1,P2,P3,P4,P5,RelativePos],AbsolutePose).
+                             
+test_query(T1,T2):-		
+				T3 is T1 - 1,	
+				write('***'),nl,			
+				convert_to_datime([1413759164,0],TTT),
+				convert_to_datime([T3,T2],T),								
+				forall(between(1,10000,Num), tq(Num,T,TTT)),write(T),nl.
 
-interpolate_tf(Id,T,Pos):- 
-				prev(Id, tf(V1,Q1), T1, _, T),
-             			next_inf(Id, tf(V2,Q2), T2, _, T),
-				datime_interpolate(T1,T2,T,Fraction),
-				interpolate_quaternion(V1,Q1,V2,Q2,[Fraction],Pos).
-
-
+tq(Num,T,TTT):- next_inf(head_cam, tf(VV,QQ), TF1, _, T).

@@ -1,4 +1,3 @@
-set_etalis_flag(output_temporary_files,off)
 set_etalis_flag(event_consumption_policy,unrestricted)
 
 compile_event_file('/home/robolab/catkin_ws/src/retalis/application_source/eventRules.txt')
@@ -12,6 +11,8 @@ memorize(tf(  '"torso"',      '"Neck"',            V,Q),[], tf(V,Q), 	torso_neck
 memorize(tf(  '"Neck"',       '"Head"',            V,Q),[], tf(V,Q), 	neck_head,  2500)
 
 memorize(tf(  '"Head"',       '"CameraTop_frame"', V,Q),[], tf(V,Q),	head_cam,   2500)
+
+
 
 subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_1"'),_),[],_,marker1,m1)
 
@@ -28,6 +29,10 @@ subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_6"'),_),[]
 subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_7"'),_),[],_,marker7,m7)
 
 subscribe(geometry_msgs__0__PoseStamped(std_msgs__0__Header(_,_,'"4x4_8"'),_),[],_,marker8,m8)
+
+
+
+
 
 
 

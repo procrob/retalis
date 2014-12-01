@@ -47,7 +47,9 @@
   <build_depend>actionlib</build_depend>
   <build_depend>message_generation</build_depend>
   <!--//subscribers_manuals///////////-->
-  <build_depend>tf</build_depend>	
+  <build_depend>tf</build_depend>
+  <build_depend>ar_pose</build_depend>	
+  <build_depend>ar_tools</build_depend>	
   <!--////////////////////////////////-->
 
   <run_depend>roscpp</run_depend>
@@ -59,6 +61,8 @@
   <run_depend>message_runtime</run_depend>
   <!--//subscribers_manuals///////////-->
   <run_depend>tf</run_depend>	
+  <run_depend>ar_pose</run_depend>
+  <run_depend>ar_tools</run_depend>	
   <!--////////////////////////////////-->
 
   <!-- The export tag contains other, unspecified, tags -->

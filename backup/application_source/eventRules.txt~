@@ -39,7 +39,6 @@ interpolate_tf(Id,T,Pos):-
 			interpolate_quaternion(V1,Q1,V2,Q2,[Fraction],Pos).
 
 transform_marker(RelativePos,Time,AbsolutePose):-
-						write('start'),nl,
 						convert_to_datime(Time,T),	
 						interpolate_tf(odom_base,T,P1),										
 						interpolate_tf(base_torso,T,P2),
@@ -48,13 +47,14 @@ transform_marker(RelativePos,Time,AbsolutePose):-
 						interpolate_tf(head_cam,T,P5),
 						transform_quaternion([P1,P2,P3,P4,P5,RelativePos],AbsolutePose).
 
-syncronized(	
-      		geometry_msgs__0__PoseStamped(std_msgs__0__Header(Seq, [Sec,NSec], Name),geometry_msgs__0__Pose(geometry_msgs__0__Point(P11,P12,P13),geometry_msgs__0__Quaternion(Q11,Q12,Q13,Q14))), 
-                transform_marker(RelPose,[Sec,NSec],[[P11,P12,P13],[Q11,Q12,Q13,Q14]]),
-      	        [[odom_base,Z],[base_torso,Z],[torso_neck,Z],[neck_head,Z],[head_cam,Z]]  		 
- 	      )     
-		 
-			<- ar_marker(Seq,Name,RelPose,Sec,NSec) where (Z is Sec +2 + (NSec * 0.000000001) ).
-                       
+%syncronized(	
+%      		geometry_msgs__0__PoseStamped(std_msgs__0__Header(Seq, [Sec,NSec], Name),geometry_msgs__0__Pose(geometry_msgs__0__Point(P11,P12,P13),geometry_msgs__0__Quaternion%%(Q11,Q12,Q13,Q14))), 
+%                transform_marker(RelPose,[Sec,NSec],[[P11,P12,P13],[Q11,Q12,Q13,Q14]]),
+%      	        [[odom_base,Z],[base_torso,Z],[torso_neck,Z],[neck_head,Z],[head_cam,Z]]  		 
+% 	      )     
+%		 
+%			<- ar_marker(Seq,Name,RelPose,Sec,NSec) where (Z is Sec + (NSec * 0.000000001) ).
+%                       
                              
+
 

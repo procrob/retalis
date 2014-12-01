@@ -273,7 +273,7 @@ event_trigger(event(smc_memory(Id,Mem_item_new),[DTimeS,DTimeE])):-!,
 event_trigger(event(Event,[T1,T2])):-
 	% no event rule matches the current event
 	\+(trClause(_Label,event(Event,[T1,T2]),_Body)),
-	assert(fired_event(Event,[T1,T2])),
+	%%%%%%%%%%%%%%%%%%%%assert(fired_event(Event,[T1,T2])),
 	logging_external_event(event(Event,[T1,T2])).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -283,7 +283,7 @@ event_trigger(event(Event,[T1,T2])):-
 event_trigger(event(Event,[T1,T2])):-
 	event_consumption_policy(recent),
 	% fire all rules to which the event contributes
-	assert(fired_event(Event,[T1,T2])),
+	%%%%%%%%%%%%%%%%%%%assert(fired_event(Event,[T1,T2])),
 	%see_db,
 	findall(trClause(Label,event(Event,[T1,T2]),Body),
 		trClause(Label,event(Event,[T1,T2]),Body),
@@ -294,7 +294,7 @@ event_trigger(event(Event,[T1,T2])):-
 event_trigger(event(Event,[T1,T2])):-
 	event_consumption_policy(recent_2),
 	% fire all rules to which the event contributes
-	assert(fired_event(Event,[T1,T2])),
+	%%%%%%%%%%%%%%%%%%%assert(fired_event(Event,[T1,T2])),
 	%see_db,
 	findall(trClause(Label,event(Event,[T1,T2]),Body),
 		trClause(Label,event(Event,[T1,T2]),Body),
@@ -305,7 +305,7 @@ event_trigger(event(Event,[T1,T2])):-
 event_trigger(event(Event,[T1,T2])):-
 	event_consumption_policy(chronological),
 	% fire all rules to which the event contributes
-	assert(fired_event(Event,[T1,T2])),
+	%%%%%%%%%%%%%%%%%%%assert(fired_event(Event,[T1,T2])),
 	%see_db,
 	findall(trClause(Label,event(Event,[T1,T2]),Body),
 		trClause(Label,event(Event,[T1,T2]),Body),
@@ -316,7 +316,7 @@ event_trigger(event(Event,[T1,T2])):-
 event_trigger(event(Event,[T1,T2])):-
 	event_consumption_policy(chronological_2),
 	% fire all rules to which the event contributes
-	assert(fired_event(Event,[T1,T2])),
+	%%%%%%%%%%%%%%%%%%%assert(fired_event(Event,[T1,T2])),
 	%see_db,
 	findall(trClause(Label,event(Event,[T1,T2]),Body),
 		trClause(Label,event(Event,[T1,T2]),Body),
@@ -327,7 +327,7 @@ event_trigger(event(Event,[T1,T2])):-
 event_trigger(event(Event,[T1,T2])):-
 	event_consumption_policy(unrestricted),
 	% fire all rules to which the event contributes
-	assert(fired_event(Event,[T1,T2])),
+	%%%%%%%%%%%%%%%%%%%assert(fired_event(Event,[T1,T2])),
 	%see_db,
 	findall(trClause(Label,event(Event,[T1,T2]),Body),
 		trClause(Label,event(Event,[T1,T2]),Body),

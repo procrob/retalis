@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   roslib
   std_msgs
   actionlib
-  message_generation	
+  message_generation
 )
 
 ## Generate messages in the 'msg' folder
@@ -52,6 +52,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   /usr/lib/swipl-6.6.6/include
+  /home/robolab/rosbuild_ws/ar_tools/ar_pose/msg_gen/cpp/include/ar_pose/
 )
 link_directories(/usr/lib/swipl-6.6.6/lib/x86_64-linux)
 
