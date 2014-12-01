@@ -90,7 +90,7 @@ prev_find_pointer(Id,PointFirst, PointEnd, Z) :-
 			Pointer is floor( (PointFirst + PointEnd) /2),
 			term_hash([Id,Pointer], PointerHash), memItem(PointerHash,Id,Pointer, _,_,PointerT2),
 			nb_setval(prev_pointer, Pointer),
-			(equal_datime(PointerT2,Z) ->
+			(equal_datime_retalis(PointerT2,Z) ->
 				true
 				;
 				less_datime(PointerT2,Z) ->
@@ -236,13 +236,14 @@ next_binary(Id, P, T1, T2, Zs, Ze) :- !,memory_size(Id,N), memory_counter(Id,Fir
 		   			
 
 next_find_pointer(Id,PointFirst, PointEnd, Zs) :-
+
 			PointFirst - PointEnd < 3 ->
 			true
 			;
 			Pointer is floor( (PointFirst + PointEnd) /2),
 			term_hash([Id,Pointer], PointerHash), memItem(PointerHash,Id,Pointer, _,_,PointerT2),
 			nb_setval(next_pointer, Pointer),
-			(equal_datime(PointerT2,Zs) ->
+			(equal_datime_retalis(PointerT2,Zs) ->
 				true
 				;
 				less_datime(PointerT2,Zs) ->
@@ -270,6 +271,7 @@ next_walk_front(Id, Zs, Pointer):- 	NewPointer is Pointer + 1,
 		   					
 		   
 next_walk_back(Id, Zs, Pointer):- 	NewPointer is Pointer - 1,
+						%write(newPointer_nextback(NewPointer)),nl,
 						term_hash([Id,NewPointer], NewPointerHash), memItem(NewPointerHash, Id, NewPointer, NewPointerP, NewPointerT1,NewPointerT2),
 						(less_equal_datime(Zs, NewPointerT2)->
 							nb_setval(next,NewPointerP),
@@ -284,29 +286,38 @@ next_walk_back(Id, Zs, Pointer):- 	NewPointer is Pointer - 1,
 		   
 		   
 less_equal_datime(datime(T1_Y,T1_M,T1_D,T1_H,T1_Min,T1_S,T1_Counter),
-		datime(T2_Y,T2_M,T2_D,T2_H,T2_Min,T2_S,T2_Counter)):-
-			( T1_Y > T2_Y -> fail; true ),
-			( T1_M > T2_M -> fail; true ),
-			( T1_D > T2_D -> fail; true ),
-			( T1_H > T2_H -> fail; true ),
-			( T1_Min > T2_Min -> fail;true ),
-			( T1_S > T2_S -> fail; true ),
-			( T2_Counter > T1_Counter -> fail; true), !.
+		  datime(T2_Y,T2_M,T2_D,T2_H,T2_Min,T2_S,T2_Counter)):-
+			(
+				( T1_Y < T2_Y );
+				( T1_Y = T2_Y, T1_M < T2_M );
+				( T1_Y = T2_Y, T1_M = T2_M, T1_D < T2_D );
+				( T1_Y = T2_Y, T1_M = T2_M, T1_D = T2_D, T1_H < T2_H );
+				( T1_Y = T2_Y, T1_M = T2_M, T1_D = T2_D, T1_H = T2_H, T1_Min < T2_Min );
+				( T1_Y = T2_Y, T1_M = T2_M, T1_D = T2_D, T1_H = T2_H, T1_Min = T2_Min, T1_S < T2_S );
+				( T1_Y = T2_Y, T1_M = T2_M, T1_D = T2_D, T1_H = T2_H, T1_Min = T2_Min, T1_S = T2_S, T1_Counter =< T2_Counter )
+			),!.
 
 
 less_equal_datime(T1,T2):-
 	number(T1),
 	number(T2),
-	T1 =< T2.
+	T1 =< T2,!.
 
 less_equal_datime(datime(T1_Y,T1_M,T1_D,T1_H,T1_Min,T1_S),
-	datime(T2_Y,T2_M,T2_D,T2_H,T2_Min,T2_S)):-
-		( T1_Y > T2_Y -> fail; true ),
-		( T1_M > T2_M -> fail; true ),
-		( T1_D > T2_D -> fail; true ),
-		( T1_H > T2_H -> fail; true ),
-		( T1_Min > T2_Min -> fail;true ),
-		( T1_S > T2_S -> fail; true ), !.
+	          datime(T2_Y,T2_M,T2_D,T2_H,T2_Min,T2_S)):-
+		(
+				( T1_Y < T2_Y );
+				( T1_Y = T2_Y, T1_M < T2_M );
+				( T1_Y = T2_Y, T1_M = T2_M, T1_D < T2_D );
+				( T1_Y = T2_Y, T1_M = T2_M, T1_D = T2_D, T1_H < T2_H );
+				( T1_Y = T2_Y, T1_M = T2_M, T1_D = T2_D, T1_H = T2_H, T1_Min < T2_Min );
+				( T1_Y = T2_Y, T1_M = T2_M, T1_D = T2_D, T1_H = T2_H, T1_Min = T2_Min, T1_S =< T2_S )
+		),!.
 
-			   
-		   
+equal_datime_retalis(datime(T_Y,T_M,T_D,T_H,T_Min,T_S,T_Counter),
+		     datime(T_Y,T_M,T_D,T_H,T_Min,T_S,T_Counter)).
+
+equal_datime_retalis(T1,T2):-
+	number(T1),
+	number(T2),
+	T1 = T2,!.
